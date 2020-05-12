@@ -19,6 +19,13 @@ library(geiger) #installed in Day1.Rmd
 install.packages("nlme")
 library(nlme) 
 library(phytools) #installed in Day1.Rmd
+install.packages("phylom")
+library(phylolm)
+install.packages("caper")
+library(caper)
+library(geiger)
+install.packages("OUwie")
+library(OUwie)
 
 #dataset1 (from Day1.Rmd)-
 obj<-read.csv("Centrarchidae.csv",row.names=1) #Centrarchidae are a species of fish
@@ -132,8 +139,7 @@ Analysing phylogenetic signal using different rate models and comparing their re
 
 tre = rtree(20) #simulate a tree by randomly splitting the edges. 50 is number of tips in a tree.
 
-install.packages("phylom")
-library(phylolm)
+
 #BM model-
 x = rTrait(n=1,phy=tre, model="BM",plot.tree = TRUE) #n=1 gives the tip.labels of the simulated tree.
 
@@ -200,8 +206,7 @@ small sample sizes, by using the AICc statistic.
 #Material taken from-http://www.phytools.org/Cordoba2017/ex/4/PGLS.html
 Model1- CorPagel is a relaxed form of Brownian Motion model. It relaxes the assumption of Brownian motion by scaling the expected covariance matrix (i.e the residual terms) between species by a value of lambda.
 ```{r}
-install.packages("caper")
-library(caper)
+
 anoleData$species<-rownames(anoleData)
 caper_comdata<-comparative.data(phy=anoleTree, data=anoleData, names.col = "species", vcv=TRUE)
 
@@ -227,7 +232,7 @@ Usually Adjusted R2 values are not reported for PGLS analysis (Chap-A Primer on 
 
 #model2- Testing different models (such as OU model) on an individual trait. Material from-https://github.com/simjoly/CourseComparativeMethods/blob/master/lecture5/OUModels.Rmd
 ```{r}
-library(geiger)
+
 #extract out columns of interest and give them names. 
 hostility<-anoleData$hostility
 names(hostility)<-rownames(anoleData)
@@ -272,8 +277,7 @@ print(aic_comparison)
 #model3-Advanced version of OU model-
 #models of continuous characters evolving under discrete selective regimes. Material from https://lukejharmon.github.io/ilhabela/instruction/2015/07/04/multi-regime-models/ 
 ```{r}
-install.packages("OUwie")
-library(OUwie)
+
 
 plotTree(anoleTree,type="fan",fsize=0.8) #plot the tree in "fan format
 

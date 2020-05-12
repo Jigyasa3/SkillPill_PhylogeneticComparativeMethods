@@ -9,6 +9,24 @@ output: html_document
 ##What can we do with the softwares mentioned here?
 
 ```{r setup, include=FALSE}
+#load all the packages-
+install.packages("ggpubr")
+library(ggpubr)
+install.packages("ape")
+library(ape)
+install.packages("phylolm")
+library(phylolm)
+install.packages("phytools")
+library(phytools)
+install.packages("geomorphs")
+library(geomorph)
+install.packages("geiger")
+library(geiger)
+install.packages("tibble")
+library(tibble)
+install.packages("tidytree")
+library(tidytree)
+
 options(scipen = 999) #disabling scientific notation in R.
 ```
 
@@ -48,8 +66,7 @@ plot(obj$buccal.length, res, ylab="Residuals", xlab="Independent variable", main
 abline(0, 0,col="blue")
 
 #test2- The residues are normally distributed-
-install.packages("ggpubr")
-library(ggpubr)
+
 #plot2- The residues are normally distributed
 ggqqplot(res)
 
@@ -85,8 +102,6 @@ Read more about the statistical reliability of the model in (chap-Statistical Is
 #When phylogeny is considered- Phylogenetic independent contrast [PIC]
 It happens sometimes that PIC model shows a lower value of p, and adjusted R2 as compared to a linear model. *But that does not mean you donot take phylogeny into consideration!*
 ```{r}
-install.packages("ape")
-library(ape)
 
 cent.tree<-read.tree("Centrarchidae.nwk")
 plotTree(cent.tree)
@@ -122,7 +137,6 @@ plot(node_age, res2, ylab="Residuals of PIC", xlab="Independent variable (node a
 abline(0, 0,col="blue")
 
 #plot2- The residues are normally distributed
-library(ggpubr)
 ggqqplot(res)
 
 shapiro.test(res) 
@@ -137,8 +151,6 @@ PIC model is based on the Brownian Motion model which can be simulated as shown 
 #simulate a tree of 20 taxa <method1> 
 tre = rtree(20) #simulate a tree by randomly splitting the edges. 50 is number of tips in a tree.
 
-install.packages("phylolm")
-library(phylolm)
 #BM model-
 x = rTrait(n=1,phy=tre, model="BM",plot.tree = TRUE)
 
@@ -163,8 +175,7 @@ phenogram(tree, x, spread.labels = TRUE, spread.cost = c(1, 0))
 ##Quantifying Phylogenetic signal-
 Before we compare traits via PIC, its important to examine if the traits have a phylogenetic signal or not. This degree of variation in species trait values is predicted by phylogeny under the Brownian motion model of trait evolution.
 ```{r}
-install.packages("phytools")
-library(phytools)
+
 ?phylosig #to check the documentation of the function
 
 obj<-obj[cent.tree$tip.label,] #order the "obj" dataframe according to "cent.tree" file
@@ -188,15 +199,14 @@ phylosig(cent.tree,as.vector(obj$buccal.length),method="lambda",test=TRUE,nsim =
 ##How do we test for phylogenetic signal between a discrete character variable like "feeding mode" and continuous variable "buccal.length?
 ```{r}
 #method1-
-library(phytools)
+
 ?phylANOVA
 fit.anova<-phylANOVA(cent.tree, as.factor(obj$feeding.mode), obj$buccal.length, nsim=1000, posthoc=TRUE, p.adj="holm")
 
 fit.anova #to check the results
 
 #method2-
-install.packages("geomorphs")
-library(geomorph)
+
 ?procD.lm
 gdf <- geomorph.data.frame(obj, phy = cent.tree) #create a dataframe that contains the data and phylogeny.
 geomorph.lm<-procD.lm(buccal.length ~ as.factor(feeding.mode), iter=999,RRPP=TRUE,effect.type = "F", SS.type = c("I", "II", "III") ,data=gdf)
@@ -218,18 +228,14 @@ Formula-Yphy=XphyB+E under the Brownian motion model, where Y is the dependent v
 
 ##BONUS::phylogenetic trait evolution across branches-Requires a time-tree.
 ```{r}
-install.packages("geiger")
-library(geiger)
+
 
 disp<-disparity(phy=geospiza$geospiza.tree, data=geospiza$geospiza.data, index="avg.sq")
 
 data(geospiza)
 disp.data<-dtt(geospiza$geospiza.tree, geospiza$geospiza.data,index="avg.sq",nsim = 1000,CI=0.95, plot=TRUE,calculateMDIp=T) #index is used to get a multivariate disparity analysis when comparing more than one trait.
 
-install.packages("tibble")
-install.packages("tidytree")
-library(tibble)
-library(tidytree)
+
 x <- as_tibble(geospiza$geospiza.tree) #convert the tree to a dataframe
 
 disp.data$MDIpVal #p.value of disparity through time compared to null.
