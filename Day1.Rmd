@@ -5,8 +5,9 @@ date: "4/8/2020"
 output: html_document
 ---
 
-##What will we learn today?
-##What can we do with the softwares mentioned here?
+# What will we learn today?
+
+### What can we do with the softwares mentioned here?
 
 ```{r setup, include=FALSE}
 #load all the packages-
@@ -30,10 +31,10 @@ library(tidytree)
 options(scipen = 999) #disabling scientific notation in R.
 ```
 
-##Importance of independent contrasts- 
-#Material taken from- http://www.phytools.org/Cordoba2017/ex/3/PICs.html 
+### Importance of independent contrasts- 
+### Material taken from- http://www.phytools.org/Cordoba2017/ex/3/PICs.html 
 
-#A linear regression model-
+## A linear regression model-  
 The Linear regression model is used to model the relationship between two variables-dependent variable and independent variable (also called as Explainatory variable). The relationship is fit in a formula: y~x, where y=dependent variable, x=independent variable. The linear equation is: y=mx+c+e
 ```{r}
 obj<-read.csv("Centrarchidae.csv",row.names=1) #Centrarchidae are a species of fish
@@ -54,7 +55,7 @@ abline(fit.ols,lwd=2,lty="dashed",col="red") #linear regression line
 
 ```
 
-##checking the statistical reliability of the model-
+## checking the statistical reliability of the model-
 ```{r}
 
 #test1- The residues are homogeneously distributed-
@@ -99,7 +100,7 @@ Adjusted R^2 is used to penalize extra variables in the model that do not add to
 
 Read more about the statistical reliability of the model in (chap-Statistical Issues and Assumptions of Phylogenetic Generalized Least Squares in "Modern Phylogenetic Comparative Methods and Their Application in Evolutionary Biology" 2019).
 
-#When phylogeny is considered- Phylogenetic independent contrast [PIC]
+# When phylogeny is considered- Phylogenetic independent contrast [PIC]
 It happens sometimes that PIC model shows a lower value of p, and adjusted R2 as compared to a linear model. *But that does not mean you donot take phylogeny into consideration!*
 ```{r}
 
@@ -146,7 +147,7 @@ shapiro.test(res)
 Explaination of PIC and model fitting-
 PIC model is based on the Brownian Motion model which can be simulated as shown below-
 
-##simulating Brownian motion model on a phylogenetic tree- Material taken from-http://phytools.org/eqg/Exercise_4.1/
+## simulating Brownian motion model on a phylogenetic tree- Material taken from-http://phytools.org/eqg/Exercise_4.1/
 ```{r}
 #simulate a tree of 20 taxa <method1> 
 tre = rtree(20) #simulate a tree by randomly splitting the edges. 50 is number of tips in a tree.
@@ -163,14 +164,14 @@ phenogram(tree, x, spread.labels = TRUE, spread.cost = c(1, 0))
 
 
 
-#Question1: Compare the Adjusted R-sqaure and p-value of "fit.pic" and "fit.ols" regression models. What is the similarity and difference?
-#Ans1: Both the models have a "weak signal" which shows that "buccal.length" and "gape.width" are weakly correlated with each other. The main difference is that "fit.pic" has a weaker signal than "fit.ols" which could be naively considered as WRONG. But THAT'S NOT TRUE. Even though the "fit.ols" signal is high it is most probably due to type I error.
+#### Question1: Compare the Adjusted R-sqaure and p-value of "fit.pic" and "fit.ols" regression models. What is the similarity and difference?  
+#### Ans1: Both the models have a "weak signal" which shows that "buccal.length" and "gape.width" are weakly correlated with each other. The main difference is that "fit.pic" has a weaker signal than "fit.ols" which could be naively considered as WRONG. But THAT'S NOT TRUE. Even though the "fit.ols" signal is high it is most probably due to type I error.
 
-#Question2: Compare the plots of residuals of linear regression data and phylogenetically corrected data. What is the difference?
-#Ans2:The residuals plot of PIC is more homogeneously distributed than that of linear regression. But as there is a weak correlation between the two continuous traits, not much difference can be observed.
+#### Question2: Compare the plots of residuals of linear regression data and phylogenetically corrected data. What is the difference?  
+#### Ans2:The residuals plot of PIC is more homogeneously distributed than that of linear regression. But as there is a weak correlation between the two continuous traits, not much difference can be observed.
 
-#Question3: What does a "weak signal" mean?
-#Ans3: "Weak signal" means that there is a weak linear (or phylogenetic) relationship between the two traits i.e. they vary independently of each other.
+#### Question3: What does a "weak signal" mean?  
+#### Ans3: "Weak signal" means that there is a weak linear (or phylogenetic) relationship between the two traits i.e. they vary independently of each other.
 
 ##Quantifying Phylogenetic signal-
 Before we compare traits via PIC, its important to examine if the traits have a phylogenetic signal or not. This degree of variation in species trait values is predicted by phylogeny under the Brownian motion model of trait evolution.
@@ -185,18 +186,18 @@ phylosig(cent.tree,as.vector(obj$buccal.length),method="K",test=FALSE)
 phylosig(cent.tree,as.vector(obj$buccal.length),method="lambda",test=TRUE,nsim = 1000) #test=TRUE means that we will test the hypothesis if phylogenetic signal is significantly different from random distribution <called as randomization tests>
 #this generates a p.value if the phylogenetic signal is significantly different from the null model of random distribution.
 ```
-#Question1: What does Lambda value = 0.24 and K value of 0.29 mean?
-#Ans1: The values of lambda and K vary from 0-1. Values closer to or greater than 1 means that the observed variation in trait is predicted by phylogeny. Values closer to 0 means there is less phylogenetic structure in the trait under Brownian Motion model. But as its difficult to assign what intermediate values of lambda and K might mean, significance testing helps to estimate if the values are significantly different from no-phylogenetic signal.
+#### Question1: What does Lambda value = 0.24 and K value of 0.29 mean?  
+#### Ans1: The values of lambda and K vary from 0-1. Values closer to or greater than 1 means that the observed variation in trait is predicted by phylogeny. Values closer to 0 means there is less phylogenetic structure in the trait under Brownian Motion model. But as its difficult to assign what intermediate values of lambda and K might mean, significance testing helps to estimate if the values are significantly different from no-phylogenetic signal.
 
-#Question2: Does "buccal.length" has a phylogenetic signal? What about "gape.width"?
-#Ans2: <perform in class>
+#### Question2: Does "buccal.length" has a phylogenetic signal? What about "gape.width"?  
+####Ans2: <perform in class>
 
-#Question3: Why do you think there was not much difference in "fit.ols" and "fit.pic"?
-#Ans3: Because "buccal.length" doesn't have a phylogenetic signal. But "gape.width" does.  The difference in OLS and PIC model was driven by "gape.width" across the phylogeny. Its possible that independently a trait has a strong phylogenetic signal, but not when it is regressed with another trait (Symonds and Bloomberg,p105-130)
+#### Question3: Why do you think there was not much difference in "fit.ols" and "fit.pic"?  
+#### Ans3: Because "buccal.length" doesn't have a phylogenetic signal. But "gape.width" does.  The difference in OLS and PIC model was driven by "gape.width" across the phylogeny. Its possible that independently a trait has a strong phylogenetic signal, but not when it is regressed with another trait (Symonds and Bloomberg,p105-130)
 
-*NOTE :Do we still use phylogeny in account if trait doesn't have a phylogenetic signal?*
+**NOTE :Do we still use phylogeny in account if trait doesn't have a phylogenetic signal?**
 
-##How do we test for phylogenetic signal between a discrete character variable like "feeding mode" and continuous variable "buccal.length?
+## How do we test for phylogenetic signal between a discrete character variable like "feeding mode" and continuous variable "buccal.length?
 ```{r}
 #method1-
 
@@ -220,11 +221,11 @@ What is Phylogenetic ANOVA?
 Phylogenetic ANOVA is a special type of PGLS (or OLS) if the independent variable (x) is a factor variable rather than continuous variable.
 Formula-Yphy=XphyB+E under the Brownian motion model, where Y is the dependent variable, X is the independent variable, B is slope coefficient and E is the residuals.
 
-#Q. Why do these two methods give different results?
-#Ans- They are based on two different algorithms to find the correlation between y and x. Check out Adams et al 2018 paper.
+#### Q. Why do these two methods give different results?  
+#### Ans- They are based on two different algorithms to find the correlation between y and x. Check out Adams et al 2018 paper.
 
-#Q. Phylogenetic ANOVA can be extended to what other kind of analysis?
-#Ans- differences between lineages, nested effects of multiple factor variables (eg: sex,lineage,etc.; check function "interaction" in geomorph R package), comparing with Null model or different alternative models.
+#### Q. Phylogenetic ANOVA can be extended to what other kind of analysis?  
+#### Ans- differences between lineages, nested effects of multiple factor variables (eg: sex,lineage,etc.; check function "interaction" in geomorph R package), comparing with Null model or different alternative models.
 
 ##BONUS::phylogenetic trait evolution across branches-Requires a time-tree.
 ```{r}

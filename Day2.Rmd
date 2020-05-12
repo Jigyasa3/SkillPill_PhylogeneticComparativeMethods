@@ -9,10 +9,10 @@ output: html_document
 options(scipen = 999) #disabling scientific notation in R.
 ```
 
-##PGLS-
+# PGLS-
 PGLS is also called as ‘phylogenetic regression’ or ‘phylogenetic general linear models’. PGLS incorporates information about phylogeny for a measured trait. It is used to estimate the strength of the phylogenetic signal i.e. the extent to which closely related species resemble each other.
 
-#load the libraries + load the data
+### load the libraries + load the data
 ```{r}
 library(ape) #installed in Day1.Rmd
 library(geiger) #installed in Day1.Rmd
@@ -48,15 +48,15 @@ anoleData<-anoleData[anoleTree$tip.label,] #order the data according to the tree
 
 ```
 
-##Some important R stuff to make your life easier before we do PGLS-
-#how to prune a tree
+## Some important R stuff to make your life easier before we do PGLS-  
+### how to prune a tree
 ```{R}
 #prune the tree to get samples of interest OR to get samples for which you have the trait data.
 
 pruned_anoleTree<-drop.tip(anoleTree,c("vanidicus","lucius","alumina"))
 ```
 
-#regex in R to match the trait data to the tree
+### regex in R to match the trait data to the tree
 ```{r}
 #If the trait data matches the tree-
 name.check(anoleTree, anoleData) #to check if the rownames in the data file match the tree tip.labels
@@ -73,8 +73,8 @@ pruned_anoleData = anoleData[which(!rownames(anoleData) %in% checkes$data_not_tr
 
 ```
 
-##Running PGLS-
-#USE1: one of the most important advantage of PGLS over PIC method is that it corrects for "amount of phylogenetic signal" in the data. This is advantageous because if there is no phylogenetic signal, then the output is same as OLS (ordinary least square) model. PIC on the otherhand "corrects" the data according to the sister group relationship between species without considering if the trait has a phylogenetic signal or not.
+### Running PGLS-  
+#### USE1: one of the most important advantage of PGLS over PIC method is that it corrects for "amount of phylogenetic signal" in the data. This is advantageous because if there is no phylogenetic signal, then the output is same as OLS (ordinary least square) model. PIC on the otherhand "corrects" the data according to the sister group relationship between species without considering if the trait has a phylogenetic signal or not.
 
 ```{r}
 #to check if there is a correlation between buccal length and gape width-
@@ -102,14 +102,14 @@ Explaining the terms-
 corBrownian: The phylogenetic tree is under Brownian motion model of evolution.
 -----------
 
-#Question1: What does this tell you about relationship between buccal length and gape width?
-#Ans- It shows that despite a strong phylogenetic signal in only "gape.width", the relationship between the two traits vary significantly with the phylogeny.
+#### Question1: What does this tell you about relationship between buccal length and gape width?  
+#### Ans- It shows that despite a strong phylogenetic signal in only "gape.width", the relationship between the two traits vary significantly with the phylogeny.
 
-#USE2: It can compare discrete data with continuous data <as we saw in Day1.Rmd>
+### USE2: It can compare discrete data with continuous data <as we saw in Day1.Rmd>
 
-#USE3: PGLS can take more than one independent variable (i.e multivariate model)
-#Q/ phylogenetic correlation between hostility and awesomeness for each ecomorph?
-#(Material taken from- https://lukejharmon.github.io/ilhabela/instruction/2015/07/03/PGLS/)
+### USE3: PGLS can take more than one independent variable (i.e multivariate model)
+### Q/ phylogenetic correlation between hostility and awesomeness for each ecomorph?  
+### (Material taken from- https://lukejharmon.github.io/ilhabela/instruction/2015/07/03/PGLS/)
 ```{r}
 head(anoleData)
 
@@ -126,13 +126,13 @@ summary(pglsModel2) #to find which ecomorphs nested with awesomeness are correla
 #*NOTE- Don't forget to do multiple comparisons on p-values before publishing a multivariate model*
 ```
 
-##Question1- Check if awesome ecomorphs have an attitude under Brownian motion model?
-##Ans- pglsModel3 <- gls(attitude ~ ecomorph * attitude , correlation = corBrownian(phy = anoleTree), data = anoleData, method = "ML")
+#### Question1- Check if awesome ecomorphs have an attitude under Brownian motion model?  
+#### Ans- pglsModel3 <- gls(attitude ~ ecomorph * attitude , correlation = corBrownian(phy = anoleTree), data = anoleData, method = "ML")
 
-##Question2- We have been considering Brownian motion model for the phylogenetic tree for each PGLS correlation analysis. What about other rate models, can we use them instead?
-##Ans- Yes, see below
+#### Question2- We have been considering Brownian motion model for the phylogenetic tree for each PGLS correlation analysis. What about other rate models, can we use them instead?  
+#### Ans- Yes, see below
 
-##Other rate models-
+#### Other rate models-
 Analysing phylogenetic signal using different rate models and comparing their results gives an understanding of the mode of evolution of trait(s) of interest.
 ```{r}
 #How do different rate models look like on a tree?
@@ -202,8 +202,8 @@ is actually about as good as m1.
 h) You should correct for small sample sizes if you use the AIC with
 small sample sizes, by using the AICc statistic.
 -----
-##OTHER RATE MODELS-
-#Material taken from-http://www.phytools.org/Cordoba2017/ex/4/PGLS.html
+# OTHER RATE MODELS-
+#### Material taken from-http://www.phytools.org/Cordoba2017/ex/4/PGLS.html
 Model1- CorPagel is a relaxed form of Brownian Motion model. It relaxes the assumption of Brownian motion by scaling the expected covariance matrix (i.e the residual terms) between species by a value of lambda.
 ```{r}
 
@@ -227,10 +227,10 @@ Kappa (κ) is a power transformation of the individual branch lengths themselves
 Usually Adjusted R2 values are not reported for PGLS analysis (Chap-A Primer on Phylogenetic Generalised Least Squares, in "Modern Phylogenetic Comparative Methods and Their Application in Evolutionary Biology",2019,pg105-130). Instead ML value of Lambda is reported.
 ------
 
-##Question1- Compare the "pglsModel1" and "pgls.caper". Did the value of the slope change between the two models?
-##Ans- <in class>
+#### Question1- Compare the "pglsModel1" and "pgls.caper". Did the value of the slope change between the two models?  
+#### Ans- <in class>
 
-#model2- Testing different models (such as OU model) on an individual trait. Material from-https://github.com/simjoly/CourseComparativeMethods/blob/master/lecture5/OUModels.Rmd
+#### model2- Testing different models (such as OU model) on an individual trait. Material from-https://github.com/simjoly/CourseComparativeMethods/blob/master/lecture5/OUModels.Rmd
 ```{r}
 
 #extract out columns of interest and give them names. 
@@ -271,11 +271,11 @@ names(aic_comparison)<-c("BM_model","Lambda_model","OU_model")
 print(aic_comparison)
 ```
 
-##Question5- Compare the OU model  with BM and lambda model. Which one fits best on the data?
-##Ans-<in class>
+#### Question5- Compare the OU model  with BM and lambda model. Which one fits best on the data?  
+#### Ans-<in class>
 
-#model3-Advanced version of OU model-
-#models of continuous characters evolving under discrete selective regimes. Material from https://lukejharmon.github.io/ilhabela/instruction/2015/07/04/multi-regime-models/ 
+#### model3-Advanced version of OU model-
+#### models of continuous characters evolving under discrete selective regimes. Material from https://lukejharmon.github.io/ilhabela/instruction/2015/07/04/multi-regime-models/ 
 ```{r}
 
 
@@ -322,7 +322,7 @@ Rates, standard error and fit of the model: alpha and sigmasq is calculated for 
 -----
 
 
-*NOTE- It is tempting to fit complex models on the data to explain biological events. But most of the time, simpler models work best. Try different iterations of simpler models before moving to complex ones. Check out this post post-https://lofrishkoff.wordpress.com/2016/12/15/the-abuse-of-ou-models/ and paper-Cooper et al 2016*
+**NOTE- It is tempting to fit complex models on the data to explain biological events. But most of the time, simpler models work best. Try different iterations of simpler models before moving to complex ones. Check out this post post-https://lofrishkoff.wordpress.com/2016/12/15/the-abuse-of-ou-models/ and paper-Cooper et al 2016**
 
 a) Type 1 error-rate is high for small trees.
 b) AIC, Likelihood ratio tests are error prone. Use simulations or MCMCM to test the model fit.
