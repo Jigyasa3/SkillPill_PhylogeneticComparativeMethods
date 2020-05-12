@@ -241,3 +241,9 @@ disp.data$MDIpVal #p.value of disparity through time compared to null.
 Explaining the output-
 The plot-the empirical pattern (solid black line) is compared to the median of 1,000 simulations of the null model of Brownian evolution (broken lines), and the shaded regions correspond to the 95% confidence intervals. The shaded area is used as a measure of departure from the null model. The higher the value of relative disparity, the greater the average volume of morphological space occupied by subclades relative to the morphological disparity of the taxon as
 a whole.
+
+
+### Session info
+```{r, session_info}
+sessionInfo()
+```
