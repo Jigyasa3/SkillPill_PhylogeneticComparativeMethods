@@ -327,3 +327,8 @@ So use the OU model with caution!
 
 
 
+### Session info
+```{r, session_info}
+sessionInfo()
+```
+
