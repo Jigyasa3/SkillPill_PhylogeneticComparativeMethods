@@ -1,0 +1,329 @@
+---
+title: "PGLS_and_RateModels_Day2"
+author: "Jigyasa_Arora"
+date: "4/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+options(scipen = 999) #disabling scientific notation in R.
+```
+
+##PGLS-
+PGLS is also called as ‘phylogenetic regression’ or ‘phylogenetic general linear models’. PGLS incorporates information about phylogeny for a measured trait. It is used to estimate the strength of the phylogenetic signal i.e. the extent to which closely related species resemble each other.
+
+#load the libraries + load the data
+```{r}
+library(ape) #installed in Day1.Rmd
+library(geiger) #installed in Day1.Rmd
+install.packages("nlme")
+library(nlme) 
+library(phytools) #installed in Day1.Rmd
+
+#dataset1 (from Day1.Rmd)-
+obj<-read.csv("Centrarchidae.csv",row.names=1) #Centrarchidae are a species of fish
+colnames(obj) #traits being measured <1 discrete trait, 2 continuous traits>
+rownames(obj) #fish species name
+
+cent.tree<-read.tree("Centrarchidae.nwk")
+plotTree(cent.tree)
+
+obj<-obj[cent.tree$tip.label,] #order the data according to the tree
+
+#dataset2 (new dataset)-
+anoleData <- read.csv("anolisDataAppended.csv", row.names = 1)
+anoleTree <- read.tree("anolis.phy")
+plotTree(anoleTree)
+#Anolis is an arboreal iguanian lizards common in the Americas.
+
+anoleData<-anoleData[anoleTree$tip.label,] #order the data according to the tree
+
+
+```
+
+##Some important R stuff to make your life easier before we do PGLS-
+#how to prune a tree
+```{R}
+#prune the tree to get samples of interest OR to get samples for which you have the trait data.
+
+pruned_anoleTree<-drop.tip(anoleTree,c("vanidicus","lucius","alumina"))
+```
+
+#regex in R to match the trait data to the tree
+```{r}
+#If the trait data matches the tree-
+name.check(anoleTree, anoleData) #to check if the rownames in the data file match the tree tip.labels
+
+#If the trait data doesn't match the tree-
+#easy example-
+obj<-obj[cent.tree$tip.label,] #if the rownames of the trait data is reshuffled.
+
+#real life-
+checkes<-name.check(pruned_anoleTree,anoleData)
+head(checkes$data_not_tree) #3 rownames are extra in the anoleData file that are not found in the pruned tree.
+
+pruned_anoleData = anoleData[which(!rownames(anoleData) %in% checkes$data_not_tree), ] #remove the 3 samples that are extra in traits data.
+
+```
+
+##Running PGLS-
+#USE1: one of the most important advantage of PGLS over PIC method is that it corrects for "amount of phylogenetic signal" in the data. This is advantageous because if there is no phylogenetic signal, then the output is same as OLS (ordinary least square) model. PIC on the otherhand "corrects" the data according to the sister group relationship between species without considering if the trait has a phylogenetic signal or not.
+
+```{r}
+#to check if there is a correlation between buccal length and gape width-
+pglsModel <- gls(buccal.length ~ gape.width, correlation = corBrownian(phy = cent.tree), data = obj, method = "ML")
+summary(pglsModel)
+
+
+
+#comparing the results with PIC (from Day1.Rmd)-
+pic.bl<-pic(as.vector(obj$buccal.length),cent.tree) #"pic" function takes a vector as the first argument
+pic.gw<-pic(as.vector(obj$gape.width),cent.tree)
+
+#The PIC model-
+fit.pic<-lm(pic.gw~pic.bl+0) #The intercept is zero.
+summary(fit.pic)
+
+#plot-
+plot(obj$buccal.length,obj$gape.width,xlab="buccal_length ", ylab="gape_width",bg="grey", cex=1.4,pch=21)
+abline(pglsModel,lwd=2,col="red") #pgls model best fit line.
+abline(fit.pic,lwd=2,lty="dashed",col="blue") #PIC model best fit line.
+
+```
+
+Explaining the terms-
+corBrownian: The phylogenetic tree is under Brownian motion model of evolution.
+-----------
+
+#Question1: What does this tell you about relationship between buccal length and gape width?
+#Ans- It shows that despite a strong phylogenetic signal in only "gape.width", the relationship between the two traits vary significantly with the phylogeny.
+
+#USE2: It can compare discrete data with continuous data <as we saw in Day1.Rmd>
+
+#USE3: PGLS can take more than one independent variable (i.e multivariate model)
+#Q/ phylogenetic correlation between hostility and awesomeness for each ecomorph?
+#(Material taken from- https://lukejharmon.github.io/ilhabela/instruction/2015/07/03/PGLS/)
+```{r}
+head(anoleData)
+
+#single independent variable-
+pglsModel1 <- gls(hostility ~ awesomeness, correlation = corBrownian(phy = anoleTree),
+data = anoleData, method = "ML")
+summary(pglsModel1)
+
+#multiple independent variable-
+pglsModel2 <- gls(hostility ~ ecomorph * awesomeness, correlation = corBrownian(phy = anoleTree), data = anoleData, method = "ML")
+anova(pglsModel2) # to check if there is a correlation between hostility and ecomorphs and awesomeness. Also to check if there is a nested effect of ecomorphs and awesomeness.
+summary(pglsModel2) #to find which ecomorphs nested with awesomeness are correlated with hostility.
+
+#*NOTE- Don't forget to do multiple comparisons on p-values before publishing a multivariate model*
+```
+
+##Question1- Check if awesome ecomorphs have an attitude under Brownian motion model?
+##Ans- pglsModel3 <- gls(attitude ~ ecomorph * attitude , correlation = corBrownian(phy = anoleTree), data = anoleData, method = "ML")
+
+##Question2- We have been considering Brownian motion model for the phylogenetic tree for each PGLS correlation analysis. What about other rate models, can we use them instead?
+##Ans- Yes, see below
+
+##Other rate models-
+Analysing phylogenetic signal using different rate models and comparing their results gives an understanding of the mode of evolution of trait(s) of interest.
+```{r}
+#How do different rate models look like on a tree?
+
+tre = rtree(20) #simulate a tree by randomly splitting the edges. 50 is number of tips in a tree.
+
+install.packages("phylom")
+library(phylolm)
+#BM model-
+x = rTrait(n=1,phy=tre, model="BM",plot.tree = TRUE) #n=1 gives the tip.labels of the simulated tree.
+
+#Lambda model-
+y = rTrait(n=1,phy=tre, model="lambda",parameters=list(lambda=1),plot.tree = TRUE)
+y = rTrait(n=1,phy=tre, model="lambda",parameters=list(lambda=0.5),plot.tree = TRUE)
+y = rTrait(n=1,phy=tre, model="lambda",parameters=list(lambda=0.3),plot.tree = TRUE)
+
+
+```
+
+Explaining the terms-
+Lambda-
+------
+
+```{r}
+#How to compare different models?
+
+#method1-
+anova(pglsModel1,pglsModel2)
+
+#method2-
+AIC(pglsModel1,pglsModel2)
+
+#other methods-likelihood ratio test, BIC
+
+```
+
+Explaining the terms-
+Anova-The anova() function will take the model objects as arguments, and return an ANOVA testing whether the more complex model is significantly better at capturing the data than the simpler model. If the resulting p-value is sufficiently low (usually less than 0.05), we conclude that the more complex model is significantly better than the simpler model, and thus favor the more complex model. If the p-value is not sufficiently low (usually greater than 0.05), we should favor the simpler model.
+------
+AIC-
+a) Lower value of AIC indicates a more parsimonious model.
+
+b) It is a relative measure of model parsimony, so it only has
+meaning if we compare the AIC for alternate hypotheses (= different
+models of the data).
+
+c) We can compare non-nested models. For instance, we could compare a
+linear to a non-linear model.
+
+d) The comparisons are only valid for models that are fit to the same response
+data (ie values of y).
+
+e) Model selection conducted with the AIC will choose the same model as
+leave-one-out cross validation (where we leave out one data point
+and fit the model, then evaluate its fit to that point) for large
+sample sizes.
+
+f) You shouldn’t compare too many models with the AIC. You will run
+into the same problems with multiple model comparison as you would
+with p-values, in that you might by chance find a model with the
+lowest AIC, that isn’t truly the most appropriate model.
+
+g) When using the AIC you might end up with multiple models that
+perform similarly to each other. So you have similar evidence
+weights for different alternate hypotheses. In the example above m3
+is actually about as good as m1.
+
+h) You should correct for small sample sizes if you use the AIC with
+small sample sizes, by using the AICc statistic.
+-----
+##OTHER RATE MODELS-
+#Material taken from-http://www.phytools.org/Cordoba2017/ex/4/PGLS.html
+Model1- CorPagel is a relaxed form of Brownian Motion model. It relaxes the assumption of Brownian motion by scaling the expected covariance matrix (i.e the residual terms) between species by a value of lambda.
+```{r}
+install.packages("caper")
+library(caper)
+anoleData$species<-rownames(anoleData)
+caper_comdata<-comparative.data(phy=anoleTree, data=anoleData, names.col = "species", vcv=TRUE)
+
+pgls.caper<-pgls(hostility ~ awesomeness, data=caper_comdata)
+summary(pgls.caper)
+#NOTE- When λ = 0 the covariance between species is zero and this corresponds to a non-phylogenetic regression. By contrast, when lambda = 1, the evolution of the residual variable is Brownian.
+
+plot(anoleData$hostility,anoleData$awesomeness,xlab="Hostility ", ylab="Awesomeness",bg="grey", cex=1.4,pch=21)
+abline(pgls.caper,lwd=2,lty="dashed",col="red")
+
+```
+
+Explaining the results-
+Kappa, Lambda and Delta-The "best" values of branch length modifiers based on ML estimation.
+Delta (δ) is a power transformation of the summed branch lengths from the root to the tips of the tree.
+Kappa (κ) is a power transformation of the individual branch lengths themselves. As with λ, both can be used to infer something about the evolutionary process. δ is a measure of whether trait evolution has sped up (δ > 1) or slowed down (δ < 1) over evolutionary time. κ is a measure of mode of evolution, with κ = 0 depicting evolutionary change that is independent of branch length—indicating a punctuated model of evolution.As with λ, both δ and κ can also be applied to PGLS calculation although they are not as commonly utilised as λ in that context (Symond and Bloomberg,pg105-130).
+
+Usually Adjusted R2 values are not reported for PGLS analysis (Chap-A Primer on Phylogenetic Generalised Least Squares, in "Modern Phylogenetic Comparative Methods and Their Application in Evolutionary Biology",2019,pg105-130). Instead ML value of Lambda is reported.
+------
+
+##Question1- Compare the "pglsModel1" and "pgls.caper". Did the value of the slope change between the two models?
+##Ans- <in class>
+
+#model2- Testing different models (such as OU model) on an individual trait. Material from-https://github.com/simjoly/CourseComparativeMethods/blob/master/lecture5/OUModels.Rmd
+```{r}
+library(geiger)
+#extract out columns of interest and give them names. 
+hostility<-anoleData$hostility
+names(hostility)<-rownames(anoleData)
+
+OU_model <- fitContinuous(anoleTree,hostility,model="OU",bounds = list(alpha = c(min = exp(-500), max = exp(1)))) #bounds are to limit the value of alpha.
+
+print(OU_model)
+
+#check the fitContinous function to find out other models that can be run-BM, lambda, Early-burst, OU, Speciation-model(kappa), non-phylogenetic model.
+?fitContinuous
+```
+Explaining the results-
+
+bounds- 
+alpha: is put in limits to ensure that the rate of evolution is estimated correctly. It is similar to limits on lambda value (0-no phylogeny, 1-more phylogeny). The limits used here are recommended by the software. Higher value of alpha=non-brownian behaviour of model. Similar to rapid bursts in evolution. Lower value of alpha=Brownian-type motion.
+sigmasq- rate of evolution.
+But these terms are used to calculate the equation of OU model. 
+------
+
+fitted "OU" model paramters-The value of alpha in our data is close to the upper bounds of the model.
+---------------------------
+
+model summary- log-likelihood, AIC values are given to describe the fit of the model.
+-------------
+
+```{r}
+#other models-
+BM_model<-fitContinuous(anoleTree,hostility,model="BM")
+
+BM_lambda_model<-fitContinuous(anoleTree,hostility,model="lambda")
+
+#comparing the models based on AIC values-
+aic_comparison<-c(BM_model$opt$aic,BM_lambda_model$opt$aic,OU_model$opt$aic)
+names(aic_comparison)<-c("BM_model","Lambda_model","OU_model")
+
+print(aic_comparison)
+```
+
+##Question5- Compare the OU model  with BM and lambda model. Which one fits best on the data?
+##Ans-<in class>
+
+#model3-Advanced version of OU model-
+#models of continuous characters evolving under discrete selective regimes. Material from https://lukejharmon.github.io/ilhabela/instruction/2015/07/04/multi-regime-models/ 
+```{r}
+install.packages("OUwie")
+library(OUwie)
+
+plotTree(anoleTree,type="fan",fsize=0.8) #plot the tree in "fan format
+
+#modelling the OU change across the tree based on "ecomorph" factor column. The ecomorphs create "regimes"
+ecomorph<-as.matrix(anoleData)[,"ecomorph"] #convert to matrix with rownames same as anoleData df.
+svl<-as.matrix(anoleData$SVL)
+rownames(svl)<-rownames(anoleData)
+colnames(svl)<-c("svl")
+
+#create "OUwie" data frame-
+OU_data<-data.frame(Genus_species=rownames(anoleData),Reg=ecomorph,X=as.numeric(svl[,1]))
+
+
+#map the "regimes" on the tree-
+tree<-make.simmap(anoleTree,ecomorph,model="ER") #assuming an equal rates model. All-rates different model (ARD) can also be chosen.
+
+#plotSimmap(tree,type="fan",fsize=0.8,ftype="i") #plot the regimes simulated on the tree.Dont run this! It shows all 100 simulations.
+
+tree$node.label<-getStates(tree,"nodes") #get the node labels
+
+#model1-
+fitBM<-OUwie(tree,OU_data,model="BM1",simmap.tree=TRUE) #single-rate Brownian motion
+
+#model2- 
+fitBMS<-OUwie(tree,OU_data,model="BMS",simmap.tree=TRUE,root.station = FALSE) #Brownian motion with different rate parameters for each state on a tree 
+
+#model3-
+fitOU<-OUwie(tree,OU_data,model="OUM",simmap.tree=TRUE)#Ornstein-Uhlenbeck model with different state means and a single alpha and sigma^2 acting on all selective regimes
+
+
+#compare the fit of the models on the data based on AIC values-
+ouwie_aicc<-c(fitBM$AICc, fitBMS$AICc, fitOU$AICc)
+names(ouwie_aicc)<-c("fitBM", "fitBMS", "fitOU")
+aic.w(ouwie_aicc) #computes weights ofr AIC values
+```
+Explaining the results-
+aic.w: It is used to examine the statistical importance of the best model with respect to the other "good" models. The weights is assigned based on -First, we compute, for
+each model, the differences in AIC with respect to the AIC of the best candidate model. This gives the relative performance of the models, not their absolute AIC values. Relative likelihood of this difference gives the AIC weights (WagenMakers and Farrell, 2004).
+----
+
+Rates, standard error and fit of the model: alpha and sigmasq is calculated for each ecomorph.
+-----
+
+
+*NOTE- It is tempting to fit complex models on the data to explain biological events. But most of the time, simpler models work best. Try different iterations of simpler models before moving to complex ones. Check out this post post-https://lofrishkoff.wordpress.com/2016/12/15/the-abuse-of-ou-models/ and paper-Cooper et al 2016*
+
+a) Type 1 error-rate is high for small trees.
+b) AIC, Likelihood ratio tests are error prone. Use simulations or MCMCM to test the model fit.
+c) Error in the data also increases the Type 1 error rate.
+So use the OU model with caution!
+
+
+
