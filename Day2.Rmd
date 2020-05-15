@@ -9,10 +9,11 @@ output: html_document
 options(scipen = 999) #disabling scientific notation in R.
 ```
 
-# PGLS-
+PGLS-
+----
 PGLS is also called as ‘phylogenetic regression’ or ‘phylogenetic general linear models’. PGLS incorporates information about phylogeny for a measured trait. It is used to estimate the strength of the phylogenetic signal i.e. the extent to which closely related species resemble each other.
 
-### load the libraries + load the data
+### load the libraries
 ```{r}
 library(ape) #installed in Day1.Rmd
 library(geiger) #installed in Day1.Rmd
@@ -27,6 +28,10 @@ library(geiger)
 install.packages("OUwie")
 library(OUwie)
 
+```
+
+#load the data-
+```{r}
 #dataset1 (from Day1.Rmd)-
 obj<-read.csv("Centrarchidae.csv",row.names=1) #Centrarchidae are a species of fish
 colnames(obj) #traits being measured <1 discrete trait, 2 continuous traits>
@@ -48,7 +53,8 @@ anoleData<-anoleData[anoleTree$tip.label,] #order the data according to the tree
 
 ```
 
-## Some important R stuff to make your life easier before we do PGLS-  
+Some important R stuff to make your life easier before we do PGLS- 
+------------------------------------------------------------------ 
 ### how to prune a tree
 ```{R}
 #prune the tree to get samples of interest OR to get samples for which you have the trait data.
@@ -73,8 +79,10 @@ pruned_anoleData = anoleData[which(!rownames(anoleData) %in% checkes$data_not_tr
 
 ```
 
-### Running PGLS-  
-#### USE1: one of the most important advantage of PGLS over PIC method is that it corrects for "amount of phylogenetic signal" in the data. This is advantageous because if there is no phylogenetic signal, then the output is same as OLS (ordinary least square) model. PIC on the otherhand "corrects" the data according to the sister group relationship between species without considering if the trait has a phylogenetic signal or not.
+#Running PGLS-
+
+USE1: one of the most important advantage of PGLS over PIC method is that it corrects for "amount of phylogenetic signal" in the data. This is advantageous because if there is no phylogenetic signal, then the output is same as OLS (ordinary least square) model. PIC on the otherhand "corrects" the data according to the sister group relationship between species without considering if the trait has a phylogenetic signal or not.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ```{r}
 #to check if there is a correlation between buccal length and gape width-
@@ -100,16 +108,20 @@ abline(fit.pic,lwd=2,lty="dashed",col="blue") #PIC model best fit line.
 
 Explaining the terms-
 corBrownian: The phylogenetic tree is under Brownian motion model of evolution.
------------
+
 
 #### Question1: What does this tell you about relationship between buccal length and gape width?  
 #### Ans- It shows that despite a strong phylogenetic signal in only "gape.width", the relationship between the two traits vary significantly with the phylogeny.
 
-### USE2: It can compare discrete data with continuous data <as we saw in Day1.Rmd>
+USE2: It can compare discrete data with continuous data <as we saw in Day1.Rmd>
+-------------------------------------------------------------------------------
 
-### USE3: PGLS can take more than one independent variable (i.e multivariate model)
-### Q/ phylogenetic correlation between hostility and awesomeness for each ecomorph?  
-### (Material taken from- https://lukejharmon.github.io/ilhabela/instruction/2015/07/03/PGLS/)
+USE3: PGLS can take more than one independent variable (i.e multivariate model)
+-------------------------------------------------------------------------------
+
+### Phylogenetic correlation between hostility and awesomeness for each ecomorph?  
+###(Material taken from- https://lukejharmon.github.io/ilhabela/instruction/2015/07/03/PGLS/)
+
 ```{r}
 head(anoleData)
 
@@ -132,7 +144,9 @@ summary(pglsModel2) #to find which ecomorphs nested with awesomeness are correla
 #### Question2- We have been considering Brownian motion model for the phylogenetic tree for each PGLS correlation analysis. What about other rate models, can we use them instead?  
 #### Ans- Yes, see below
 
-#### Other rate models-
+Other rate models-
+------------------
+
 Analysing phylogenetic signal using different rate models and comparing their results gives an understanding of the mode of evolution of trait(s) of interest.
 ```{r}
 #How do different rate models look like on a tree?
@@ -152,8 +166,12 @@ y = rTrait(n=1,phy=tre, model="lambda",parameters=list(lambda=0.3),plot.tree = T
 ```
 
 Explaining the terms-
-Lambda-
-------
+Lambda- This term transforms the tree toplogy by stretching the tip branches relative to internal branches.
+Lambda=0 This means there is no phylogenetic signal, the tree has a star topology.
+Lambda=1 This means Brownian motion model of phylogentic signal.
+Lambda less than 1 but greater than 0- The internal branch distance is shorter than tip branches.
+Significant phylogenetic signal via lambda is estimated by randomization test whereby we estimate if lambda signficantly differs from 0 or 1.
+
 
 ```{r}
 #How to compare different models?
@@ -170,7 +188,7 @@ AIC(pglsModel1,pglsModel2)
 
 Explaining the terms-
 Anova-The anova() function will take the model objects as arguments, and return an ANOVA testing whether the more complex model is significantly better at capturing the data than the simpler model. If the resulting p-value is sufficiently low (usually less than 0.05), we conclude that the more complex model is significantly better than the simpler model, and thus favor the more complex model. If the p-value is not sufficiently low (usually greater than 0.05), we should favor the simpler model.
-------
+
 AIC-
 a) Lower value of AIC indicates a more parsimonious model.
 
@@ -201,7 +219,8 @@ is actually about as good as m1.
 
 h) You should correct for small sample sizes if you use the AIC with
 small sample sizes, by using the AICc statistic.
------
+
+
 # OTHER RATE MODELS-
 #### Material taken from-http://www.phytools.org/Cordoba2017/ex/4/PGLS.html
 Model1- CorPagel is a relaxed form of Brownian Motion model. It relaxes the assumption of Brownian motion by scaling the expected covariance matrix (i.e the residual terms) between species by a value of lambda.
@@ -224,8 +243,8 @@ Kappa, Lambda and Delta-The "best" values of branch length modifiers based on ML
 Delta (δ) is a power transformation of the summed branch lengths from the root to the tips of the tree.
 Kappa (κ) is a power transformation of the individual branch lengths themselves. As with λ, both can be used to infer something about the evolutionary process. δ is a measure of whether trait evolution has sped up (δ > 1) or slowed down (δ < 1) over evolutionary time. κ is a measure of mode of evolution, with κ = 0 depicting evolutionary change that is independent of branch length—indicating a punctuated model of evolution.As with λ, both δ and κ can also be applied to PGLS calculation although they are not as commonly utilised as λ in that context (Symond and Bloomberg,pg105-130).
 
-Usually Adjusted R2 values are not reported for PGLS analysis (Chap-A Primer on Phylogenetic Generalised Least Squares, in "Modern Phylogenetic Comparative Methods and Their Application in Evolutionary Biology",2019,pg105-130). Instead ML value of Lambda is reported.
-------
+Usually Adjusted R2 values are not reported for PGLS analysis (Chapter-A Primer on Phylogenetic Generalised Least Squares, in "Modern Phylogenetic Comparative Methods and Their Application in Evolutionary Biology",2019,pg105-130). Instead ML value of Lambda is reported.
+
 
 #### Question1- Compare the "pglsModel1" and "pgls.caper". Did the value of the slope change between the two models?  
 #### Ans- <in class>
@@ -247,16 +266,15 @@ print(OU_model)
 Explaining the results-
 
 bounds- 
-alpha: is put in limits to ensure that the rate of evolution is estimated correctly. It is similar to limits on lambda value (0-no phylogeny, 1-more phylogeny). The limits used here are recommended by the software. Higher value of alpha=non-brownian behaviour of model. Similar to rapid bursts in evolution. Lower value of alpha=Brownian-type motion.
+alpha: puts limits to ensure that the rate of evolution is estimated correctly. It is similar to limits on lambda value (0-no phylogeny, 1- phylogeny). The limits used here are recommended by the software. Higher value of alpha=non-brownian behaviour of model. Similar to rapid bursts in evolution. Lower value of alpha=Brownian-type motion.
 sigmasq- rate of evolution.
 But these terms are used to calculate the equation of OU model. 
-------
 
 fitted "OU" model paramters-The value of alpha in our data is close to the upper bounds of the model.
----------------------------
+
 
 model summary- log-likelihood, AIC values are given to describe the fit of the model.
--------------
+
 
 ```{r}
 #other models-
@@ -316,11 +334,8 @@ aic.w(ouwie_aicc) #computes weights ofr AIC values
 Explaining the results-
 aic.w: It is used to examine the statistical importance of the best model with respect to the other "good" models. The weights is assigned based on -First, we compute, for
 each model, the differences in AIC with respect to the AIC of the best candidate model. This gives the relative performance of the models, not their absolute AIC values. Relative likelihood of this difference gives the AIC weights (WagenMakers and Farrell, 2004).
-----
 
 Rates, standard error and fit of the model: alpha and sigmasq is calculated for each ecomorph.
------
-
 
 **NOTE- It is tempting to fit complex models on the data to explain biological events. But most of the time, simpler models work best. Try different iterations of simpler models before moving to complex ones. Check out this post post-https://lofrishkoff.wordpress.com/2016/12/15/the-abuse-of-ou-models/ and paper-Cooper et al 2016**
 
